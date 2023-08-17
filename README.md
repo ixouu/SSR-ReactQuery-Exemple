@@ -1,34 +1,24 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+[Doc officielle](https://tanstack.com/query/v4/docs/react/guides/ssr#using-the-app-directory-in-nextjs-13)
+## Hydrate Approche
+Préfetcher la query sur le server, déhydrate le cache et réhydrate le client avec `<Hydrate>`
++ Plus de setup front à faire
++ Pas besoin de prop drill
++ Le refetch de la query est basé sur l'instant où la query à été préfetchée sur le server.
+## Provider
+`<QueryClientProvider>` est requis. Il doit récupérer un `<QueryClient>` depuis leur contexte. Il faut wrapper le component tree avec le `<QueryClientProvider>` et lui passer l'instance de `QueryClient`.
 
-## Getting Started
+## Création du singleton => //lib/getQueryClient
+Création d'un singleton qui est scopé à la request d'instance `QueryClient`. Cela permet de s'assurrer que la data n'est pas partagée entre différents users et requests, tout en créant un seul QueryClien par request.
 
-First, run the development server:
+`const getQueryClient = cache(() => new QueryClient())`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+Fetcher la data dans un Server component plus haut dans le component tree que les components Client qui utilisent les queries pré-fetchés. Ces queries seront disponibles de tous les composants plus profonds dans le tree.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Fetching
++ Récupérer l'instance singleton `QueryClient` 
++ Préfetcher la data en utilisant la méthode prefetchQuery et attendre que ce soit complete
++ Utiliser `dehydrate` pour obtenir la déhydratation du state des queries préfetchées depuis le query cache
++ Wrapper le composant tree qui utilise les queries préfetchées à l'intérieur de `<Hydrate>` et le fournir avec le state déhydraté.
++ On peut fetcher dans plusieurs Server Components et utiliser `<Hydrate>` dans différents endroits.
+  
+   
